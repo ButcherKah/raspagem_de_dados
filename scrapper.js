@@ -80,11 +80,73 @@ async function performScrapper() {
                 await driver.actions().sendKeys(Key.TAB).perform();
                 await delay(200);
                 await driver.actions().sendKeys(Key.TAB).perform();
-                await delay(2000);
+                await delay(200);
+                await driver.actions().sendKeys(Key.TAB).perform();
+                await delay(200);
                 await driver.actions().sendKeys(Key.TAB).perform();
                 await delay(2000);
                 await driver.actions().sendKeys(term, Key.RETURN).perform();
                 await delay(5000);
+                await driver.findElements(By.css('[data-testid="cellInnerDiv"]'))
+                    .then((elements) => {
+                        for(let i = 0; i < 5; i++) {
+                            elements[i].findElement(By.css('time, [datetime]'))
+                            .then(dateTime => {
+                                dateTime.getAttribute('datetime')
+                                    .then(datetimeValue => {
+                                        console.log("data: " + datetimeValue);
+                                    });
+                            })
+                            .catch(error => {
+                                console.error('An error occurred:', error);
+                            })
+                            elements[i].findElement(By.css('[data-testid="tweetText"]'))
+                                .getText()
+                                .then(text => {
+                                    console.log("conteudo: " + text);
+                                })
+                                .catch(error => {
+                                    console.error('An error occurred:', error);
+                                });
+                            elements[i].findElements(By.css('[data-testid="app-text-transition-container"]'))
+                                .then(commentElements => {
+                                    commentElements[0].getText()
+                                        .then(text => {
+                                            console.log("comentarios: " + (text.length === 0 ? "0" : text));
+                                        })
+                                        .catch(error => {
+                                            console.error('An error occurred:', error);
+                                        });
+                                    commentElements[1].getText()
+                                    .then(text => {
+                                        console.log("retuitadas: " + (text.length === 0 ? "0" : text));
+                                    })
+                                    .catch(error => {
+                                        console.error('An error occurred:', error);
+                                    });
+                                    commentElements[2].getText()
+                                    .then(text => {
+                                        console.log("curtidas: " + (text.length === 0 ? "0" : text));
+                                    })
+                                    .catch(error => {
+                                        console.error('An error occurred:', error);
+                                    });
+                                    commentElements[3].getText()
+                                    .then(text => {
+                                        console.log("atividade: " + (text.length === 0 ? "0" : text));
+                                    })
+                                    .catch(error => {
+                                        console.error('An error occurred:', error);
+                                    });
+                                })
+                                .catch(error => {
+                                    console.error('An error occurred:', error);
+                                });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('An error occurred:', error);
+                    })
             })
             .then(() => {
                 // console.log("]")
