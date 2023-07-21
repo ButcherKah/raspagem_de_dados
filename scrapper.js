@@ -33,8 +33,8 @@ async function performScrapper() {
     console.log("************************************************")
     console.log("Scrapper Inicializado.")
     console.log("************************************************")
-    console.log("[")
-    content += ("[\n");
+    content += ("{");
+    console.log('[')
 
     try {
         await driver.get(url)
@@ -94,16 +94,17 @@ async function performScrapper() {
                             .then(dateTime => {
                                 dateTime.getAttribute('datetime')
                                     .then(datetimeValue => {
-                                        console.log("data: " + datetimeValue);
+                                        console.log('    {')
+                                        console.log('        "timestamp": ' + datetimeValue);
                                     });
                             })
-                            .catch(error => {
+                            .catch(error => {   
                                 console.error('An error occurred:', error);
                             })
                             elements[i].findElement(By.css('[data-testid="tweetText"]'))
                                 .getText()
                                 .then(text => {
-                                    console.log("conteudo: " + text);
+                                    console.log('        "conteudo": ' + "'" + text + "'");
                                 })
                                 .catch(error => {
                                     console.error('An error occurred:', error);
@@ -112,28 +113,30 @@ async function performScrapper() {
                                 .then(commentElements => {
                                     commentElements[0].getText()
                                         .then(text => {
-                                            console.log("comentarios: " + (text.length === 0 ? "0" : text));
+                                            console.log('        "comentarios:" ' + (text.length === 0 ? "0" : text));
                                         })
                                         .catch(error => {
                                             console.error('An error occurred:', error);
                                         });
                                     commentElements[1].getText()
                                     .then(text => {
-                                        console.log("retuitadas: " + (text.length === 0 ? "0" : text));
+                                        console.log('        "retuitadas:" ' + (text.length === 0 ? "0" : text));
                                     })
                                     .catch(error => {
                                         console.error('An error occurred:', error);
                                     });
                                     commentElements[2].getText()
                                     .then(text => {
-                                        console.log("curtidas: " + (text.length === 0 ? "0" : text));
+                                        console.log('        "curtidas:" ' + (text.length === 0 ? "0" : text));
                                     })
                                     .catch(error => {
                                         console.error('An error occurred:', error);
                                     });
                                     commentElements[3].getText()
                                     .then(text => {
-                                        console.log("atividade: " + (text.length === 0 ? "0" : text));
+                                        console.log('        "atividade:" ' + (text.length === 0 ? "0" : text));
+                                        console.log('    },')
+                                        
                                     })
                                     .catch(error => {
                                         console.error('An error occurred:', error);
@@ -149,7 +152,7 @@ async function performScrapper() {
                     })
             })
             .then(() => {
-                // console.log("]")
+                console.log("]")
                 // content += "]\n"
                 // const blob = Buffer.from(content, 'utf8');
                 // const filename = 'result11.json';
