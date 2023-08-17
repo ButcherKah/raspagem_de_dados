@@ -1,6 +1,7 @@
 const { Builder, By, Key, until } = require('selenium-webdriver');
 const fs = require('fs');
 const { json } = require('stream/consumers');
+const { parse } = require('path');
 
 async function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -33,20 +34,21 @@ async function performScrapper() {
     console.log("************************************************")
     console.log("Scrapper Inicializado.")
     console.log("************************************************")
-    content += ("{");
-    console.log('[')
+    content += '[\n'
+    console.log('[\n')
 
     try {
         await driver.get(url)
             .then(async () => {
+                await delay(5000);
                 await driver.actions().sendKeys(Key.TAB).perform();
                 await delay(2000);
                 await driver.actions().sendKeys(Key.TAB).perform();
-                await delay(200);
+                await delay(2000);
                 await driver.actions().sendKeys(Key.TAB).perform();
-                await delay(200);
-                await driver.actions().sendKeys(Key.TAB).perform();
-                await delay(200);
+                await delay(2000);
+                // await driver.actions().sendKeys(Key.TAB).perform();
+                // await delay(2000);
                 await driver.actions().sendKeys(accountEmail, Key.RETURN).perform();
                 await delay(2000);
                 await driver.actions().sendKeys(accountPassword, Key.RETURN).perform();
@@ -87,56 +89,87 @@ async function performScrapper() {
                 await delay(2000);
                 await driver.actions().sendKeys(term, Key.RETURN).perform();
                 await delay(5000);
-                await driver.findElements(By.css('[data-testid="cellInnerDiv"]'))
-                    .then((elements) => {
-                        for(let i = 0; i < 5; i++) {
-                            elements[i].findElement(By.css('time, [datetime]'))
+                let totalScrapped = 0;
+                while (totalScrapped != 200) {
+                    await driver.findElements(By.css('[data-testid="cellInnerDiv"]'))
+                    .then(async (elements) => {
+                        for(let i = 0; i < 4; i++) {
+                            await delay(200);
+                            await elements[i].findElement(By.css('time, [datetime]'))
                             .then(dateTime => {
                                 dateTime.getAttribute('datetime')
                                     .then(datetimeValue => {
-                                        console.log('    {')
-                                        console.log('        "timestamp": ' + datetimeValue);
+                                        console.log('\t{\n')
+                                        console.log(`\t\t"timestamp": "${datetimeValue}",`);
+                                        content += '\t{\n';
+                                        content += `\t\t"timestamp": "${datetimeValue}",`;
+                                        console.log('\n');
+                                        content += '\n';
                                     });
                             })
                             .catch(error => {   
-                                console.error('An error occurred:', error);
+                                console.log('\t\t{\n\t\t"timestamp": null,\n');
+                                content += '\t\t{\n\t\t"timestamp": null,\n'
                             })
-                            elements[i].findElement(By.css('[data-testid="tweetText"]'))
+                            await elements[i].findElement(By.css('[data-testid="tweetText"]'))
                                 .getText()
                                 .then(text => {
-                                    console.log('        "conteudo": ' + "'" + text + "'");
+                                    let withoutReturns = text.replace(/\n/g, "");
+                                    let withoutQuotes = withoutReturns.replace(/"/g, "'");
+                                    console.log(`\t\t"conteudo": "${withoutQuotes}",`);
+                                    content += `\t\t"conteudo": "${withoutQuotes}",`;
+                                    console.log('\n');
+                                    content += '\n';
                                 })
                                 .catch(error => {
                                     console.error('An error occurred:', error);
                                 });
-                            elements[i].findElements(By.css('[data-testid="app-text-transition-container"]'))
+                            await elements[i].findElements(By.css('[data-testid="app-text-transition-container"]'))
                                 .then(commentElements => {
                                     commentElements[0].getText()
                                         .then(text => {
-                                            console.log('        "comentarios:" ' + (text.length === 0 ? "0" : text));
+                                            let parsedText = text.length === 0 ? "0" : text;
+                                            console.log(`\t\t"comentarios": "${parsedText}",`);
+                                            content += `\t\t"comentarios": "${parsedText}",`;
+                                            console.log('\n');
+                                            content += '\n';
                                         })
                                         .catch(error => {
                                             console.error('An error occurred:', error);
                                         });
                                     commentElements[1].getText()
                                     .then(text => {
-                                        console.log('        "retuitadas:" ' + (text.length === 0 ? "0" : text));
+                                        let parsedText = text.length === 0 ? "0" : text;
+                                        console.log(`\t\t"retuitadas": "${parsedText}",`);
+                                        content += `\t\t"retuitadas": "${parsedText}",`;
+                                        console.log('\n');
+                                        content += '\n';
                                     })
                                     .catch(error => {
                                         console.error('An error occurred:', error);
                                     });
                                     commentElements[2].getText()
                                     .then(text => {
-                                        console.log('        "curtidas:" ' + (text.length === 0 ? "0" : text));
+                                        let parsedText = text.length === 0 ? "0" : text;
+                                        console.log(`\t\t"curtidas": "${parsedText}",`);
+                                        content += `\t\t"curtidas": "${parsedText}",`;
+                                        console.log('\n');
+                                        content += '\n';
                                     })
                                     .catch(error => {
                                         console.error('An error occurred:', error);
                                     });
                                     commentElements[3].getText()
                                     .then(text => {
-                                        console.log('        "atividade:" ' + (text.length === 0 ? "0" : text));
-                                        console.log('    },')
-                                        
+                                        let parsedText = text.length === 0 ? "0" : text;
+                                        console.log(`\t\t"atividade": "${parsedText}"`);
+                                        console.log('\t},')
+                                        content += `\t\t"atividade": "${parsedText}"`;
+                                        if (totalScrapped === 199) {
+                                            content += '\n\t}\n'
+                                        } else {
+                                            content += '\n\t},\n'
+                                        }
                                     })
                                     .catch(error => {
                                         console.error('An error occurred:', error);
@@ -145,27 +178,33 @@ async function performScrapper() {
                                 .catch(error => {
                                     console.error('An error occurred:', error);
                                 });
+                            totalScrapped++;
                         }
+                        for(let i = 0; i < 50; i++) {
+                            await driver.actions().sendKeys(Key.DOWN).perform();
+                        }
+                        await delay(5000);
+                        totalScrapped += 4;
                     })
                     .catch(error => {
                         console.error('An error occurred:', error);
                     })
+                }
             })
             .then(() => {
-                console.log("]")
-                // content += "]\n"
-                // const blob = Buffer.from(content, 'utf8');
-                // const filename = 'result11.json';
-                // const fileStream = fs.createWriteStream(filename);
-                // fileStream.write(blob, 'binary');
-                // fileStream.end();
-                // fileStream.on('finish', () => {
-                //     console.log(`File "${filename}" created.`);
-                // });
+                console.log("\n]")
+                content += "\n]"
+                const blob = Buffer.from(content, 'utf8');
+                const filename = 'result.json';
+                const fileStream = fs.createWriteStream(filename);
+                fileStream.write(blob, 'binary');
+                fileStream.end();
+                fileStream.on('finish', () => {
+                    console.log(`File "${filename}" created.`);
+                });
                 return driver.sleep(2000);
             });
     } finally {
-        // Quit the WebDriver
         await driver.quit();
     }
 }
